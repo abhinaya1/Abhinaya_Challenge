@@ -1,0 +1,38 @@
+---
+- hosts: webservers
+  become: yes
+
+  tasks:
+  - name: Check if Apache is running and enabled
+    service:
+      name: apache2
+    register: service_status
+  - debug:
+      msg: "Apache is not running correctly."
+    when: service_status.state != 'started' and service_status.enabled != 'yes'
+
+  - name: Check if UFW is enabled
+    command: ufw status verbose
+    register: ufw_status
+  - debug:
+      msg: "UFW is not enabled."
+    when: "'Status: active' not in ufw_status.stdout"
+
+  - name: Check if SSL certificate and key files exist
+    stat:
+      path: "{{ item }}"
+    register: ssl_files
+    loop:
+      - /etc/ssl/certs/apache-selfsigned.crt
+      - /etc/ssl/private/apache-selfsigned.key
+  - debug:
+      msg: "SSL file {{ item.stat.pw_name }} does not exist."
+    when: not item.stat.exists
+    loop: "{{ ssl_files.results }}"
+
+  - name: Check HTTP to HTTPS redirection
+    command: grep -q 'Redirect / https://' /etc/apache2/sites-available/000-default.conf
+    register: redirect_status
+  - debug:
+      msg: "HTTP to HTTPS redirection is not configured correctly."
+    when: redirect_status.rc != 0
