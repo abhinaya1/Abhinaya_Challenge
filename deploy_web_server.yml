@@ -30,3 +30,77 @@
         </body>
         </html>
       dest: /var/www/html/index.html
+
+  - name: Install UFW
+    apt: 
+      name: ufw
+      state: present
+
+  - name: Allow SSH on UFW
+    ufw:
+      rule: allow
+      port: '22'
+      proto: tcp
+
+  - name: Allow http on UFW
+    ufw:
+      rule: allow
+      port: '80'
+      proto: tcp
+
+  - name: Allow https on UFW
+    ufw:
+      rule: allow
+      port: '443'
+      proto: tcp
+
+  - name: Enable UFW
+    ufw:
+      state: enabled
+
+  - name: Install OpenSSL
+    apt:
+      name: openssl
+      state: present
+
+  - name: Generate OpenSSL private key
+    command: openssl genrsa -out /etc/ssl/private/apache-selfsigned.key 2048
+
+  - name: Generate OpenSSL public key
+    command: openssl req -new -key /etc/ssl/private/apache-selfsigned.key -out /etc/ssl/certs/apache-selfsigned.csr -subj "/C=US/ST=New York/L=New York City/O=OrgName/OU=IT Department/CN=example.com"
+
+  - name: Generate OpenSSL certificate
+    command: openssl x509 -req -days 365 -in /etc/ssl/certs/apache-selfsigned.csr -signkey /etc/ssl/private/apache-selfsigned.key -out /etc/ssl/certs/apache-selfsigned.crt
+
+  - name: Configure Apache to use SSL
+    blockinfile:
+      path: /etc/apache2/sites-available/default-ssl.conf
+      block: |
+        <VirtualHost _default_:443>
+          ServerAdmin webmaster@localhost
+          DocumentRoot /var/www/html
+
+          SSLEngine on
+          SSLCertificateFile      /etc/ssl/certs/apache-selfsigned.crt
+          SSLCertificateKeyFile /etc/ssl/private/apache-selfsigned.key
+
+          ErrorLog ${APACHE_LOG_DIR}/error.log
+          CustomLog ${APACHE_LOG_DIR}/access.log combined
+        </VirtualHost>
+
+  - name: Enable Apache SSL module
+    command: a2enmod ssl
+
+  - name: Enable Apache SSL site
+    command: a2ensite default-ssl
+
+  - name: Configure Apache to redirect HTTP to HTTPS
+    lineinfile:
+      path: /etc/apache2/sites-available/000-default.conf
+      insertafter: 'DocumentRoot /var/www/html'
+      line: '        Redirect / https://your_domain_or_IP/'
+
+  - name: Restart Apache to apply changes
+    service:
+      name: apache2
+      state: restarted
