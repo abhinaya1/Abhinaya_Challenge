@@ -1,4 +1,4 @@
-##README
+#README
 This repository contains a collection of scripts to deploy and test a secure Apache web server using Ansible and to validate credit card numbers using Python.
 
 #Prerequisites
