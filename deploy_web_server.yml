@@ -1,6 +1,7 @@
 ---
 - hosts: webservers
   become: yes
+  remote_user: ubuntu
 
   tasks:
   - name: Update apt cache
@@ -98,7 +99,7 @@
     lineinfile:
       path: /etc/apache2/sites-available/000-default.conf
       insertafter: 'DocumentRoot /var/www/html'
-      line: '        Redirect / https://your_domain_or_IP/'
+      line: '        Redirect / https://34.207.70.122/'
 
   - name: Restart Apache to apply changes
     service:
