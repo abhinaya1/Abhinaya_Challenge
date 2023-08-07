@@ -1,6 +1,6 @@
 import re
 
-def validate_credit_card(card_number):
+def check_credit_card(card_number):
     # Remove hyphens
     card_number = card_number.replace("-", "")
     
@@ -16,8 +16,9 @@ def validate_credit_card(card_number):
         return 'Invalid'
     
     return 'Valid'
-
-n = int(input().strip())
-for _ in range(n):
-    card_number = input().strip()
-    print(validate_credit_card(card_number))
+N = input('number of credit cards to test:')
+N = int(N.strip())
+for _ in range(N):
+    card_number = input('credit card number:')
+    card_number = card_number.strip()
+    print(check_credit_card(card_number))
