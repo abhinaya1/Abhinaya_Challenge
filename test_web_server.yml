@@ -1,15 +1,16 @@
 ---
 - hosts: webservers
   become: yes
+  remote_user: ubuntu
 
   tasks:
-  - name: Check if Apache is running and enabled
-    service:
-      name: apache2
-    register: service_status
-  - debug:
-      msg: "Apache is not running correctly."
-    when: service_status.state != 'started' and service_status.enabled != 'yes'
+  - name: Populate service facts
+    ansible.builtin.service_facts:
+
+  - name: Print service facts
+    ansible.builtin.debug:
+      msg: "apache is not running"
+    when: ansible_facts.services.apache2.state != 'running'
 
   - name: Check if UFW is enabled
     command: ufw status verbose
